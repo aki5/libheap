@@ -136,8 +136,10 @@ main(void)
 		st = tnow();
 		min = 0;
 		while((np = binheap_delmin(&heap)) != NULL){
-			if(np->key < min)
+			if(np->key < min){
 				printf("KATASTTRR\n");
+				exit(0);
+			}
 			min = np->key;
 		}
 		et = tnow();
