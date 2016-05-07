@@ -123,9 +123,8 @@ binoheap_delmin(Binoheap *a)
 		return NULL;
 	min = a->chld[a->mini];
 	a->chld[a->mini] = NULL;
-	if(min->chld != NULL)
-		for(i = 0; i < min->nchld; i++)
-			prefetch(min->chld[i]);
+	for(i = 0; i < min->nchld; i++)
+		prefetch(min->chld[i]);
 	mergen(a, min->chld, min->nchld);
 	//free(min->chld);
 	return min;
@@ -186,7 +185,7 @@ main(void)
 	et = tnow();
 	printf("sorted in %f sec\n", et-st);
 
-for(j = 0; j < 50; j++){
+for(j = 0; j < 10; j++){
 	memset(nodes, 0, nnodes * sizeof nodes[0]);
 	for(i = 0; i < nnodes; i++)
 		nodes[i].key = random();

@@ -188,7 +188,7 @@ main(void)
 	et = tnow();
 	printf("sorted in %f sec\n", et-st);
 
-for(j = 0; j < 50; j++){
+for(j = 0; j < 10; j++){
 	memset(nodes, 0, nnodes * sizeof nodes[0]);
 	for(i = 0; i < nnodes; i++)
 		nodes[i].key = random();
