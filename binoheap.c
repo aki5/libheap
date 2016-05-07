@@ -185,29 +185,29 @@ main(void)
 	et = tnow();
 	printf("sorted in %f sec\n", et-st);
 
-for(j = 0; j < 10; j++){
-	memset(nodes, 0, nnodes * sizeof nodes[0]);
-	for(i = 0; i < nnodes; i++)
-		nodes[i].key = random();
+	for(j = 0; j < 10; j++){
+		memset(nodes, 0, nnodes * sizeof nodes[0]);
+		for(i = 0; i < nnodes; i++)
+			nodes[i].key = random();
 
-	st = tnow();
-	for(i = 0; i < nnodes; i++){
-		np = nodes + i;
-		binoheap_insert(&heap, np);
-	}
-	et = tnow();
-	printf("inserted in %f sec\n", et-st);
+		st = tnow();
+		for(i = 0; i < nnodes; i++){
+			np = nodes + i;
+			binoheap_insert(&heap, np);
+		}
+		et = tnow();
+		printf("inserted in %f sec, %.2f Mins/s\n", et-st, 1e-6*nnodes/(et-st));
 
-	st = tnow();
-	min = 0;
-	while((np = binoheap_delmin(&heap)) != NULL){
-		if(np->key < min)
-			printf("KATASTTRR\n");
-		min = np->key;
+		st = tnow();
+		min = 0;
+		while((np = binoheap_delmin(&heap)) != NULL){
+			if(np->key < min)
+				printf("KATASTTRR\n");
+			min = np->key;
+		}
+		et = tnow();
+		printf("deleted in order, in %f sec, %.2f Mdels/s\n", et-st, 1e-6*nnodes/(et-st));
 	}
-	et = tnow();
-	printf("deleted in order, in %f sec, %.2f Mdels/s\n", et-st, 1e-6*nnodes/(et-st));
-}
 	free(nodes);
 
 	return 0;
