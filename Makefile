@@ -8,6 +8,10 @@ PROGS=\
 
 all: $(PROGS)
 
+test: all
+	./binoheap
+	./binoheap2
+
 binoheap: binoheap.o
 	$(CC) -o $@ binoheap.o
 
