@@ -169,7 +169,7 @@ main(void)
 	double st, et;
 	int i, j, min, nnodes;
 
-	nnodes = 1*1000*1000;
+	nnodes = 8*1000*1000;
 
 	memset(&heap, 0, sizeof heap);
 
@@ -188,7 +188,7 @@ main(void)
 	et = tnow();
 	printf("sorted in %f sec\n", et-st);
 
-	for(j = 0; j < 10; j++){
+	for(j = 0; j < 3; j++){
 		memset(nodes, 0, nnodes * sizeof nodes[0]);
 		for(i = 0; i < nnodes; i++)
 			nodes[i].key = random();
