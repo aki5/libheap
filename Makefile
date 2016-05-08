@@ -1,6 +1,6 @@
 
 CC=gcc
-CFLAGS=-O2 -fomit-frame-pointer
+CFLAGS=-O2 -fomit-frame-pointer -W -Wall
 
 PROGS=\
 	binheap\

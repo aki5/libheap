@@ -20,6 +20,22 @@ struct Binnode {
 	long long key;
 };
 
+void
+binheap_pushdown(Binheap *a, int i)
+{
+	Binnode *b;
+	int pi;
+
+	b = a->heap[i-1];
+	pi = i/2;       // pi: 0, 1, 1, 2, 2, 3, 3, 4, 4 ...
+	while(pi > 0 && b->key < a->heap[pi-1]->key){
+		a->heap[i-1] = a->heap[pi-1];
+		i = pi;
+		pi = i/2;
+	}
+	a->heap[i-1] = b;
+}
+
 Binnode *
 binheap_delmin(Binheap *a)
 {
@@ -48,8 +64,9 @@ binheap_delmin(Binheap *a)
 	}
 	if(i-1 < a->nheap){
 		a->heap[i-1] = a->heap[a->nheap-1];
-		a->nheap--;
 	}
+	a->nheap--;
+	binheap_pushdown(a, i);
 	return min;
 }
 
@@ -93,6 +110,33 @@ tnow(void)
 }
 
 int
+binheap_bad(Binheap *a)
+{
+	int i, pi;
+	for(i = a->nheap; i > 1; i--){
+		pi = i/2;
+		if(a->heap[pi-1]->key > a->heap[i-1]->key){
+			printf("binheap bad: i %d key %lld\n", i, a->heap[i-1]->key);
+			return i;
+		}
+	}
+	return 0;
+}
+
+void
+binheap_dump(Binheap *a)
+{
+	int i;
+	printf("nheap %d\n", a->nheap);
+	for(i = 1; i < a->nheap; i++){
+		printf("%lld ", a->heap[i-1]->key);
+		if((i & (i+1)) == 0)
+			printf("\n");
+	}
+	printf("\n");
+}
+
+int
 main(void)
 {
 	Binheap heap;
@@ -102,6 +146,7 @@ main(void)
 	int i, j, min, nnodes;
 
 	nnodes = 1*1000*1000;
+//	nnodes = 100;
 
 	memset(&heap, 0, sizeof heap);
 
@@ -113,12 +158,12 @@ main(void)
 	for(i = 0; i < nnodes; i++)
 		nodes[i].key = random();
 	et = tnow();
-	printf("generated keys in %f sec\n", et-st);
+	printf("generated keys in %f sec, %.2f Mkeys/s\n", et-st, 1e-6*nnodes/(et-st));
 
 	st = tnow();
 	qsort(nodes, nnodes, sizeof nodes[0], binnode_cmp);
 	et = tnow();
-	printf("sorted in %f sec\n", et-st);
+	printf("sorted in %f sec, %.2f Mkeys/s\n", et-st, 1e-6*nnodes/(et-st));
 
 	for(j = 0; j < 10; j++){
 		memset(nodes, 0, nnodes * sizeof nodes[0]);
@@ -132,13 +177,20 @@ main(void)
 		}
 		et = tnow();
 		printf("inserted in %f sec, %.2f Mins/s\n", et-st, 1e-6*nnodes/(et-st));
+		if(binheap_bad(&heap) != 0){
+			printf("binheap_insert fail!\n");
+			binheap_dump(&heap);
+			exit(1);
+		}
 
 		st = tnow();
 		min = 0;
 		while((np = binheap_delmin(&heap)) != NULL){
+//			if(binheap_bad(&heap) != 0){
 			if(np->key < min){
-				printf("KATASTTRR\n");
-				exit(0);
+				printf("binheap_delmin fail!\n");
+				binheap_dump(&heap);
+				exit(1);
 			}
 			min = np->key;
 		}
