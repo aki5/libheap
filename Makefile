@@ -14,8 +14,8 @@ test: all
 	./binoheap
 	./binoheap2
 
-binheap: binheap.o
-	$(CC) -o $@ binheap.o
+binheap: testmain.o binheap.o
+	$(CC) -o $@ testmain.o binheap.o
 
 binoheap: binoheap.o
 	$(CC) -o $@ binoheap.o

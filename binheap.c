@@ -4,26 +4,12 @@
 #include <string.h> 
 #include <sys/time.h>
 #include <time.h>
+#include "binheap.h"
 
-#define force_inline inline __attribute__((always_inline))
-
-typedef struct Binheap Binheap;
-typedef struct Binnode Binnode;
-
-struct Binheap {
-	Binnode **heap;
-	int nheap;
-	int aheap;
-};
-
-struct Binnode {
-	long long key;
-};
-
-void
-binheap_pushdown(Binheap *a, int i)
+static inline void
+pushup(Heap *a, int i)
 {
-	Binnode *b;
+	Heapnode *b;
 	int pi;
 
 	b = a->heap[i-1];
@@ -36,10 +22,10 @@ binheap_pushdown(Binheap *a, int i)
 	a->heap[i-1] = b;
 }
 
-Binnode *
-binheap_delmin(Binheap *a)
+Heapnode *
+heap_delmin(Heap *a)
 {
-	Binnode *min;
+	Heapnode *min;
 	int i, c1, c2;
 	if(a->nheap == 0)
 		return NULL;
@@ -66,33 +52,28 @@ binheap_delmin(Binheap *a)
 		a->heap[i-1] = a->heap[a->nheap-1];
 	}
 	a->nheap--;
-	binheap_pushdown(a, i);
+	pushup(a, i);
 	return min;
 }
 
 void
-binheap_insert(Binheap *a, Binnode *b)
+heap_insert(Heap *a, Heapnode *b)
 {
-	int i, pi;
+	int i;
 	if(a->nheap == a->aheap){
 		a->aheap += a->aheap == 0 ? 32 : a->aheap;
 		a->heap = realloc(a->heap, a->aheap * sizeof a->heap[0]);
 	}
 	i = ++a->nheap; //  i: 1, 2, 3, 4, 5, 6, 7, 8, 9 ...
-	pi = i/2;       // pi: 0, 1, 1, 2, 2, 3, 3, 4, 4 ...
-	while(pi > 0 && b->key < a->heap[pi-1]->key){
-		a->heap[i-1] = a->heap[pi-1];
-		i = pi;
-		pi = i/2;
-	}
 	a->heap[i-1] = b;
+	pushup(a, i);
 }
 
 int
 binnode_cmp(const void *va, const void *vb)
 {
-	Binnode *ap = (Binnode *)va;
-	Binnode *bp = (Binnode *)vb;
+	Heapnode *ap = (Heapnode *)va;
+	Heapnode *bp = (Heapnode *)vb;
 	if(ap->key < bp->key)
 		return -1;
 	else if(ap->key > bp->key)
@@ -101,16 +82,8 @@ binnode_cmp(const void *va, const void *vb)
 		return 0;
 }
 
-double
-tnow(void)
-{
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	return (double)tv.tv_sec + 1e-6*tv.tv_usec;
-}
-
 int
-binheap_bad(Binheap *a)
+heap_bad(Heap *a)
 {
 	int i, pi;
 	for(i = a->nheap; i > 1; i--){
@@ -124,7 +97,7 @@ binheap_bad(Binheap *a)
 }
 
 void
-binheap_dump(Binheap *a)
+heap_dump(Heap *a)
 {
 	int i;
 	printf("nheap %d\n", a->nheap);
@@ -134,70 +107,4 @@ binheap_dump(Binheap *a)
 			printf("\n");
 	}
 	printf("\n");
-}
-
-int
-main(void)
-{
-	Binheap heap;
-	Binnode *nodes;
-	Binnode *np;
-	double st, et;
-	int i, j, min, nnodes;
-
-	nnodes = 8*1000*1000;
-//	nnodes = 100;
-
-	memset(&heap, 0, sizeof heap);
-
-	srandom(time(NULL));
-	nodes = malloc(nnodes * sizeof nodes[0]);
-	memset(nodes, 0, nnodes * sizeof nodes[0]);
-
-	st = tnow();
-	for(i = 0; i < nnodes; i++)
-		nodes[i].key = random();
-	et = tnow();
-	printf("generated keys in %f sec, %.2f Mkeys/s\n", et-st, 1e-6*nnodes/(et-st));
-
-	st = tnow();
-	qsort(nodes, nnodes, sizeof nodes[0], binnode_cmp);
-	et = tnow();
-	printf("sorted in %f sec, %.2f Mkeys/s\n", et-st, 1e-6*nnodes/(et-st));
-
-	for(j = 0; j < 3; j++){
-		memset(nodes, 0, nnodes * sizeof nodes[0]);
-		for(i = 0; i < nnodes; i++)
-			nodes[i].key = random();
-
-		st = tnow();
-		for(i = 0; i < nnodes; i++){
-			np = nodes + i;
-			binheap_insert(&heap, np);
-		}
-		et = tnow();
-		printf("inserted in %f sec, %.2f Mins/s\n", et-st, 1e-6*nnodes/(et-st));
-		if(binheap_bad(&heap) != 0){
-			printf("binheap_insert fail!\n");
-			binheap_dump(&heap);
-			exit(1);
-		}
-
-		st = tnow();
-		min = 0;
-		while((np = binheap_delmin(&heap)) != NULL){
-//			if(binheap_bad(&heap) != 0){
-			if(np->key < min){
-				printf("binheap_delmin fail!\n");
-				binheap_dump(&heap);
-				exit(1);
-			}
-			min = np->key;
-		}
-		et = tnow();
-		printf("deleted in order, in %f sec, %.2f Mdels/s\n", et-st, 1e-6*nnodes/(et-st));
-	}
-	free(nodes);
-
-	return 0;
 }
